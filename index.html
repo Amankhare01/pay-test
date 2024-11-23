@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AV Food Factory</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        background-color: #ebebeb;
+      }
+      .card {
+        width: 300px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+      }
+      .card img {
+        width: 100%;
+        height: auto;
+      }
+      .card-content {
+        padding: 20px;
+      }
+      .card-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .card-description {
+        font-size: 1em;
+        color: #666;
+        margin-bottom: 20px;
+      }
+      .card-buttons {
+        display: flex;
+        gap: 10px;
+        padding: 20px;
+        border-top: 1px solid #e0e0e0;
+      }
+      .card-button {
+        flex: 1;
+        padding: 10px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 1em;
+        color: #fff;
+        transition: background-color 0.3s ease;
+      }
+      .add-to-cart {
+        background-color: #ff9800;
+      }
+      .add-to-cart:hover {
+        background-color: #e68900;
+      }
+      .book-now {
+        background-color: #4caf50;
+      }
+      .book-now:hover {
+        background-color: #43a047;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form id="payment-form">
+      <div class="card">
+        <img src="https://cdn.prod.website-files.com/64022de562115a8189fe542a/6616718fe4a871d7278a2037_Product-Concept-What-Is-It-And-How-Can-You-Best-Use-It.jpg" alt="Product Image">
+        <div class="card-content">
+          <div class="card-title">Luxary Rooms</div>
+          <div class="card-description">
+            This is a brief description of the product. It gives an overview of the features and benefits.
+          </div>
+        </div>
+        <div class="card-buttons"><h2>Room</h2><select name="amount" type="number" aria-label="Choose a Room">
+          <option value="">Choose Room</option>
+          <option value="599" name="amount" type="number" id="amount">Single person - 599</option>
+          <option value="499" name="amount" type="number" id="amount">Couple friendly - 499</option>
+          <option value="899" name="amount" type="number" id="amount">Family - 899</option>
+        </select>
+        
+        </div>
+        <div class="card-buttons">
+            <button type="button" class="card-button add-to-cart" onclick="addToCart()">Add to Cart</button>
+            <button type="button" class="card-button book-now" onclick="payNow()">Pay Now</button>
+        </div>
+      </div>
+    </form>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+            async function payNow() {
+  const amount = document.getElementById("amount").value;
+  if (!amount) {
+    alert("Please choose a room.");
+    return;
+  }
+
+  const response = await fetch("/create-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      amount,
+      currency: "INR",
+      receipt: "receipt#1",
+      notes: {},
+    }),
+  });
+
+  const order = await response.json();
+  if (order.error) {
+    alert("Error: " + order.error);
+    return;
+  }
+
+  const options = {
+    key: 'rzp_test_ocuXD6Q9Bhb4lq',
+    amount: order.amount,
+    currency: order.currency,
+    name: "Ratana International Hotel",
+    description: "Test Transaction",
+    image:"/PHOTO.png",
+    order_id: order.id,
+    callback_url: "http://localhost:8080/payment-success",
+    prefill: {
+      name: "Your Name",
+      email: "your.email@example.com",
+      contact: "Enter Your Phone",
+    },
+    theme: {
+      color: "#3399c",
+    },
+    handler: function (response) {
+      alert("Pay ment success")
+      fetch('/verify-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'ok') {
+            window.location.href = '/payment-success';
+          } else {
+            alert('Payment verification failed');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error verifying payment');
+        });
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+
+    </script>
+  </body>
+</html>
