@@ -141,7 +141,7 @@
     const order_id = urlParams.get('order_id');
 
     if (order_id) {
-      fetch(`/fetch-payment-details?order_id=${order_id}`)
+      fetch(`http://localhost:8080/fetch-payment-details?order_id=${order_id}`)
         .then((response) => response.json())
         .then((data) => {
           const paymentDetails = document.getElementById("payment-details");

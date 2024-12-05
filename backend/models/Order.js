@@ -1,6 +1,5 @@
 // models/order.js
-
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 // Order schema definition
 const orderSchema = new mongoose.Schema({
@@ -16,5 +15,4 @@ const orderSchema = new mongoose.Schema({
 
 // Create the model based on the schema
 const Order = mongoose.model('Order', orderSchema);
-
-module.exports = Order;
+export default Order
